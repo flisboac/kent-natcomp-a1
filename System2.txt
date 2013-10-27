@@ -4,7 +4,7 @@ void system2Simulation(int A, int B, double da, double db, double ka, double kb,
 	double time = 0;
 	int counterMax = 1000;
 	int counter = 0;
-
+	//create the matrix that will hold all the graph values
 	vector<vector<double>> funcValues(counterMax);
 	for ( int i = 0 ; i < 3 ; i++ ){
 		funcValues[i].resize(counterMax);
@@ -12,7 +12,7 @@ void system2Simulation(int A, int B, double da, double db, double ka, double kb,
 	funcValues[0].at(0) = At;
 	funcValues[1].at(0) = Bt;
 	funcValues[2].at(0) = 0;
-
+	//calculate all rates and their normalization
 	while(counter != counterMax){
 	double rate1 = (double)ka*(pow(At,h)*Kb)/((Ka+pow(At, h))*(Kb+pow(Bt,l)));
 	double rate2 = Bt*db;
@@ -23,7 +23,7 @@ void system2Simulation(int A, int B, double da, double db, double ka, double kb,
 	double rate2Norm = rate2/rateSum;
 	double rate3Norm = rate3/rateSum;
 	double rate4Norm = rate4/rateSum;
-
+	//Monte Carlo algorithm to choose what will be the next reaction
 	int reaction = 0;
 	double randonN = rand()/(double)RAND_MAX;
 	if(0<= randonN && randonN <rate1Norm){
@@ -38,7 +38,7 @@ void system2Simulation(int A, int B, double da, double db, double ka, double kb,
 	if(rate1Norm+rate2Norm+rate3Norm <= randonN && randonN <rate1Norm+rate2Norm+rate3Norm+rate4Norm){
 		reaction = 4;
 	}
-	
+	//process the reaction
 	if(reaction == 1){
 		Bt++;
 	}else if(reaction == 2){
@@ -52,7 +52,7 @@ void system2Simulation(int A, int B, double da, double db, double ka, double kb,
 			At--;
 		}
 	}
-
+	//update the matrix with values normalized
 	double P = rate1+rate2+rate3+rate4;
 	time += -(1/rateSum)*log(rand()/(double)RAND_MAX);
 	funcValues[0].at(counter) = At/(double)(A+B);
@@ -60,6 +60,7 @@ void system2Simulation(int A, int B, double da, double db, double ka, double kb,
 	funcValues[2].at(counter) = time;
 	counter++;
 	}
+	//print everything as a debug method
 	printf("A                      B                       time");
 	printf("\n");
 	for(int i = 0; i<counterMax; i++){
