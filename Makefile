@@ -11,19 +11,18 @@ HEADERS=ModelSimulation.hpp
 OBJS=main.o
 EXEC=ModelSimulation
 
-all: run
+all: exec
 
 clean:
 	$(RM) $(OBJS) $(EXEC)
 
 cleandata: clean
-	$(RM) System1_* System2_*
+	$(RM) System1*.* System2*.*
+
+exec: $(EXEC)
 
 run: $(EXEC)
-	./$(EXEC) 1 199 1 1
-	./$(EXEC) 1 1999 1 1
-	./$(EXEC) 1 19999 1 1
-	./$(EXEC) 1 199999 1 1
+	./$(EXEC) 1
 
 $(EXEC): $(OBJS)
 	$(ELINK) $@ $? $(CPPLIBS)

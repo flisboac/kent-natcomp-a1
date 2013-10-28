@@ -6,7 +6,21 @@
 #define PREC double
 #define ATOX std::atof
 
+struct SystemRun {
+
+	long A, B;
+	PREC k;
+};
+
+static const SystemRun System1_Runs[] = {
+	{ 199, 1, 1 },
+	{ 1999, 1, 1 },
+	{ 19999, 1, 1 }
+	//{ 199999, 1, 1 }
+};
+
 static void print_help(const char* progname);
+static void run_system1(System1<PREC>& sys, const char* basename, bool exportData);
 
 int main(int argc, char** argv){
 	int systemId, ret = 0;
@@ -20,37 +34,45 @@ int main(int argc, char** argv){
 
 	switch(systemId) {
 	case 1: {
+		bool specific = false;
 		long A = System1<PREC>::DefaultA;
 		long B = System1<PREC>::DefaultB;
 		PREC k = System1<PREC>::DefaultRate;
 
-    	std::stringstream basename;
+    	const char* basename;
 
-		if (argc > 2) A = atol(argv[2]);
-		if (argc > 3) B = atol(argv[3]);
-		if (argc > 4) k = ATOX(argv[4]);
+		if (argc > 2) { specific = true; A = atol(argv[2]); };
+		if (argc > 3) { specific = true; B = atol(argv[3]); };
+		if (argc > 4) { specific = true; k = ATOX(argv[4]); };
 
-		if (argc > 6)
-			basename << argv[5];
-		else
-			basename << "System1_" << A << "_" << B << "_" << k;
+		if (argc > 5) {
+			specific = true;
+			basename = argv[5];
 
-		std::cout << "System: 1" << std::endl;
-		std::cout << "Initial Population of A: " << A << std::endl;
-		std::cout << "Initial Population of B: " << B << std::endl;
-		std::cout << "Rate: " << k << std::endl;
-		std::cout << "Output file basename: " << basename.str().data() << std::endl;
+		} else {
+			basename = "System1";
+		}
 
-		System1<PREC> sys(A, B, k);
+		if (specific) {
+			System1<PREC> sys(A, B, k);
+			run_system1(sys, basename, true);
+			//sys.print();
 
-		std::cout << "* Starting simulation..." << std::endl;
-		sys.run();
+		} else {
+			System1<PREC>::Group grp;
+			std::vector<System1<PREC> > systems;
 
-		std::cout << "* Simulation finished. Exporting data..." << std::endl;
-		sys.exportCsv(basename.str().data());
+			for (size_t i = 0; i < sizeof(System1_Runs) / sizeof(SystemRun); i++) {
+				System1<PREC> sys(System1_Runs[i].A, System1_Runs[i].B, System1_Runs[i].k);
+				run_system1(sys, basename, true);
+				grp.add(sys);
+				//sys.print();
+			}
 
-		std::cout << "* Finished." << std::endl;
-		//sys.print();
+			std::cout << "* Generating graphs..." << std::endl;
+			grp.exportGraphs(basename);
+			std::cout << "* Finished." << std::endl;
+		}
 		break;
 	}
 	case 2: {
@@ -67,6 +89,24 @@ int main(int argc, char** argv){
 	//system1Simulation(19999, 1, 1);
 	//system1Simulation(199999, 1, 10);
 	return ret;
+}
+
+void run_system1(System1<PREC>& sys, const char* basename, bool exportData) {
+	std::cout << "System: 1" << std::endl;
+	std::cout << "Initial Population of A: " << sys.getInitialA() << std::endl;
+	std::cout << "Initial Population of B: " << sys.getInitialB() << std::endl;
+	std::cout << "Rate: " << sys.getRate() << std::endl;
+	std::cout << "Output file basename: " << basename << std::endl;
+
+	std::cout << "* Starting simulation..." << std::endl;
+	sys.run();
+
+	if (exportData) {
+		std::cout << "* Finished. Exporting data..." << std::endl;
+		sys.exportCsv(basename);
+	}
+
+	std::cout << "* Finished." << std::endl;
 }
 
 void print_help(const char* progname) {
