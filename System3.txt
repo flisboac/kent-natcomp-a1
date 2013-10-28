@@ -1,0 +1,74 @@
+void system3Simulation(int A, int B, int C, double k1,double k2,double k3,double k4){
+	int At = A;
+	int Bt = B;
+	int Ct = C;
+	double time = 0;
+	int counterMax = 100;
+	int counter = 0;
+	//create the matrix that will hold all the graph values
+	vector<vector<double>> funcValues(4);
+	for ( int i = 0 ; i < 4 ; i++ ){
+		funcValues[i].resize(counterMax);
+	}
+	funcValues[0].at(0) = At;
+	funcValues[1].at(0) = Bt;
+	funcValues[2].at(0) = Ct;
+	funcValues[3].at(0) = 0;
+	//calculate all rates and their normalization
+	while(counter != counterMax && At != 0&& Ct != 0 && Ct != 0){
+	double rate1 = At*Bt*Ct*k1;
+	double rate2 = At*Ct*k2;
+	double rate3 = Bt*Ct*k3;
+	double rate4 = Ct*k4;
+	double rateSum = rate1+rate2+rate3+rate4;
+	double rate1Norm = rate1/rateSum;
+	double rate2Norm = rate2/rateSum;
+	double rate3Norm = rate3/rateSum;
+	double rate4Norm = rate4/rateSum;
+	//Monte Carlo algorithm to choose what will be the next reaction
+	int reaction = 0;
+	double randonN = rand()/(double)RAND_MAX;
+	if(0<= randonN && randonN <rate1Norm){
+		reaction = 1;
+	}
+	if(rate1Norm <= randonN && randonN <rate1Norm+rate2Norm){
+		reaction = 2;
+	}
+	if(rate1Norm+rate2Norm <= randonN && randonN <rate1Norm+rate2Norm+rate3Norm){
+		reaction = 3;
+	}
+	if(rate1Norm+rate2Norm+rate3Norm <= randonN && randonN <rate1Norm+rate2Norm+rate3Norm+rate4Norm){
+		reaction = 4;
+	}
+	//process the reaction
+	if(reaction == 1){
+		At--;
+		Bt--;
+		Ct++;
+	}else if(reaction == 2){
+		At--;
+		Ct--;
+	}else if(reaction == 3){
+		Bt--;
+		Ct--;
+	}else if(reaction == 4){
+		Ct--;
+	}
+	//update the matrix with values normalized
+
+	double P = rate1+rate2+rate3+rate4;
+	time += -(1/rateSum)*log(rand()/(double)RAND_MAX);
+	funcValues[0].at(counter) = At/(double)(A+B+C);
+	funcValues[1].at(counter) = Bt/(double)(A+B+C);
+	funcValues[2].at(counter) = Ct/(double)(A+B+C);
+	funcValues[3].at(counter) = time;
+	counter++;
+	}
+	//print everything as a debug method
+	printf("A                    B                     C                     time");
+	printf("\n");
+	for(int i = 0; i<counterMax; i++){
+		printf("%f              %f                %f                %f",(double)funcValues[0].at(i), (double)funcValues[1].at(i),(double)funcValues[2].at(i), (double)funcValues[3].at(i) );
+		printf("\n");
+	}
+};
