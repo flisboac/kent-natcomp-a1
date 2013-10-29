@@ -4,7 +4,7 @@ ELINK=g++ -o
 RM=rm -f
 
 CPPFLAGS=
-CPPLIBS=-lm -lmgl
+CPPLIBS=-lm
 
 SOURCES=main.cpp
 HEADERS=ModelSimulation.hpp
@@ -16,8 +16,10 @@ all: exec
 clean:
 	$(RM) $(OBJS) $(EXEC)
 
-cleandata: clean
+cleandata:
 	$(RM) System1*.* System2*.*
+
+cleanall: clean cleandata
 
 exec: $(EXEC)
 

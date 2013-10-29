@@ -8,7 +8,6 @@
 #include <iomanip>
 #include <cmath>
 #include <cstdlib>
-#include <mgl2/mgl.h>
 
 template <class T>
 class System1 {
@@ -78,16 +77,27 @@ public:
 	}
 
 	void printTabulated(std::ostream& out, const char* colsep) {
+		printTabulated(out, colsep, 10, 10);
+	}
 
-		int w = 10, p = 10;
-		out << std::setw(w) << std::setprecision(p) << "A";
+	void printTabulated(std::ostream& out, const char* colsep, int w, int p) {
+
+		out << std::setw(w) << std::setprecision(p) << "Total A";
 		out << std::setw(w) << std::setprecision(p) << colsep;
-		out << std::setw(w) << std::setprecision(p) << "B";
+		out << std::setw(w) << std::setprecision(p) << "Total B";
 		out << std::setw(w) << std::setprecision(p) << colsep;
-		out << std::setw(w) << std::setprecision(p) << "time" << std::endl;
+		out << std::setw(w) << std::setprecision(p) << "Normalized A";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Normalized B";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Time" << std::endl;
 		for (typename DataVector::iterator it = data.begin(); it != data.end(); ++it) {
+			T normA = (*it).A/(T)((*it).A + (*it).B);
+			T normB = (*it).A/(T)((*it).A + (*it).B);
 			out << std::setw(w) << std::setprecision(p) << (*it).A << colsep;
 			out << std::setw(w) << std::setprecision(p) << (*it).B << colsep;
+			out << std::setw(w) << std::setprecision(p) << normA << colsep;
+			out << std::setw(w) << std::setprecision(p) << normB << colsep;
 			out << std::setw(w) << std::setprecision(p) << (*it).t << std::endl;
 		}
 	}
@@ -110,107 +120,221 @@ public:
 	}
 
 	void exportCsv(std::ofstream& file) {
-		printTabulated(file, ";");
+		printTabulated(file, ";", 0, 10);
 	}
 
-/*
-	bool exportGraphs(const char* basename) {
-		mglData y;
-		mgls_prepare1d(&y);
-		gr->SetOrigin(0,0,0);
+};
 
-		gr->SubPlot(1,2,0,"");
-		gr->Title("Normalized A/B Qty.");
-		gr->Box();
-		gr->Plot(y);
 
-		gr->SubPlot(1,2,0,"");
-		gr->Title("Normalized A/B Qty.");
-		gr->Box();
-		gr->Plot(y);
+template <class T>
+class System2 {
 
-		mglData yc(30), xc(30), z(30);
-		z.Modify("2*x-1");
-		yc.Modify("sin(pi*(2*x-1))"); xc.Modify("cos(pi*2*x-pi)");
-		gr->Plot(xc,yc,z,"rs");
-	}
-*/
+public:
+	struct Initials {
 
-	class Group {
+		long A, B;
+		T da, db;
+		T ka, kb;
+		T Ka, Kb;
+		T h, l;
 
-	private:
-		std::vector<System1<T> > systems;
+		Initials() : A(0), B(0), da(0), db(0), ka(0), kb(0), Ka(0), Kb(0), h(0), l(0) {}
+		Initials(long vA, long vB, T vda, T vdb, T vka, T vkb, T vKa, T vKb, T vh, T vl) :
+			A(vA), B(vB), da(vda), db(vdb), ka(vka), kb(vkb), Ka(vKa), Kb(vKb), h(vh), l(vl) {}
+	};
 
-	public:
-		Group() {};
+	struct Data {
 
-		void add(System1<T> sys) {
-			systems.push_back(sys);
+		long A, B;
+		T nA, nB;
+		T t;
+
+		Data() : A(0), B(0), nA(0), nB(0) {};
+		Data(long vA, long vB) {
+			set(vA, vB);
 		}
 
-		void clear() {
-			systems.clear();
-		}
-
-		void exportGraphs(const char* basename) {
-
-  			mglGraph gr(0, 2000, 800);
-			size_t maxIterations = 0;
-			size_t maxSystems = systems.size();
-			mglData abTotals;
-			std::string filename(basename);
-			filename += ".png";
-
-			for (typename std::vector<System1<T> >::iterator it = systems.begin(); it != systems.end(); ++it) {
-				size_t iterations = (*it).getTotalIterations();
-				if (iterations > maxIterations)
-					maxIterations = iterations;
+		void set(long vA, long vB, T vt) {
+			T sum = vA + vB;
+			A = vA; B = vB; t = vt;
+			nA = 0; nB = 0;
+			if (sum != 0) {
+				nA = A / sum;
+				nB = B / sum;
 			}
-
-			std::cout << "** Max Iterations: " << maxIterations << std::endl;
-			std::cout << "** Max Systems: " << maxSystems << std::endl;
-			abTotals.Create(maxIterations, maxSystems);
-			std::cout << "** Initializing data..." << std::endl;
-			for (size_t iter = 0; iter < maxIterations; iter++) {
-				for (size_t sysid = 0; sysid < maxSystems; sysid++) {
-					System1<T> sys = systems.at(sysid);
-
-					if (iter < sys.getTotalIterations()) {
-						System1<T>::Data data = sys.getIteration(iter);
-						T val = (data.B) / (T)(data.A + data.B);
-						//std::cout << "*** [" << iter << ", " << sysid << "] = " << val << std::endl;
-						abTotals.Put(val, iter, sysid);
-
-					} else {
-						//std::cout << "*** [" << iter << ", " << sysid << "] (x) = " << 0 << std::endl;
-						abTotals.Put(0, iter, sysid);
-					}
-				}
-			}
-			
-			std::cout << "** Starting the drawing process..." << std::endl;
-  			gr.Alpha(true);
-  			gr.Light(true);
-  			//gr.SetCoor(12); // Log-X
-  			gr.SetTickTempl('x', "%.5g");
-  			gr.SetTickTempl('y', "%.5g");
-			gr.SetOrigin(0,0,0);
-			gr.SetRanges(0, maxIterations, 0, 1);
-			gr.Adjust("xy");
-			gr.Title("Normalized A/B Totals");
-			gr.Box();
-			gr.Plot(abTotals);
-			gr.WriteFrame(filename.data());
-
-			/*
-			gr->SubPlot(1,2,0,"");
-			gr->Title("Normalized B per Initial Cond.");
-			gr->Box();
-			gr->Plot(abTotals);
-			*/
-
 		}
 	};
+
+	typedef std::vector<Data> DataVector;
+
+	static const size_t DefaultMaxIterations = 1000;
+	static const long Default_A = 100;
+	static const long Default_B = 10;
+	static const T Default_da = 1;
+	static const T Default_db = 1;
+	static const T Default_ka = 1;
+	static const T Default_kb = 1;
+	static const T Default_Ka = 1;
+	static const T Default_Kb = 1;
+	static const T Default_h = 1;
+	static const T Default_l = 1;
+
+private:
+	Initials initials;
+	DataVector data;
+	size_t maxIterations;
+
+public:
+	System2() : maxIterations(DefaultMaxIterations) {}
+	System2(const Initials& vInitials) : initials(vInitials), maxIterations(DefaultMaxIterations) {}
+	System2(long vA, long vB, T vda, T vdb, T vka, T vkb, T vKa, T vKb, T vh, T vl) : maxIterations(DefaultMaxIterations) {
+		initials.A = vA;
+		initials.B = vB;
+		initials.da = vda;
+		initials.db = vdb;
+		initials.ka = vka;
+		initials.kb = vkb;
+		initials.Ka = vKa;
+		initials.Kb = vKb;
+		initials.h = vh;
+		initials.l = vl;
+	}
+
+	Initials& getInitials() { return initials; }
+	size_t getTotalIterations() { return data.size(); }
+	size_t getMaxIterations() { return maxIterations; }
+	Data& getIteration(size_t iter) { return data.at(iter); }
+
+
+	void run() {
+		long At = initials.A;
+		long Bt = initials.B;
+		Data current;
+		T t = 0;
+		size_t counterMax = maxIterations;
+		size_t counter = 0;
+
+		T da = initials.da;
+		T db = initials.db;
+		T ka = initials.ka;
+		T kb = initials.kb;
+		T Ka = initials.Ka;
+		T Kb = initials.Kb;
+		T h = initials.h;
+		T l = initials.l;
+
+		// create the matrix that will hold all the graph values
+		data.clear();
+
+		// Push initial values
+		current.set(At, Bt, t);
+		data.push_back(current);
+
+		// calculate all rates and their normalization
+		while (counter != counterMax && At != 0 && Bt != 0) {
+			T rate1 = (T)ka * (pow(At,h)*Kb) / ((Ka+pow(At, h)) * (Kb+pow(Bt,l)));
+			T rate2 = Bt * db;
+			T rate3 = (T)kb * (pow(Bt,l)*Ka) / ((Ka+pow(At, h)) * (Kb+pow(Bt,l)));
+			T rate4 = At * da;
+			T rateSum = rate1 + rate2 + rate3 + rate4;
+			T rate1Norm = rate1/rateSum;
+			T rate2Norm = rate2/rateSum;
+			T rate3Norm = rate3/rateSum;
+			T rate4Norm = rate4/rateSum;
+
+			// Monte Carlo algorithm to choose what will be the next reaction
+			int reaction = 0;
+
+			T randonN = rand()/(T)RAND_MAX;
+			if(0 <= randonN && randonN < rate1Norm) {
+				reaction = 1;
+			}
+			if(rate1Norm <= randonN && randonN < (rate1Norm + rate2Norm)) {
+				reaction = 2;
+			}
+			if((rate1Norm + rate2Norm) <= randonN && randonN < (rate1Norm + rate2Norm + rate3Norm)) {
+				reaction = 3;
+			}
+			if((rate1Norm + rate2Norm + rate3Norm) <= randonN && randonN < (rate1Norm + rate2Norm + rate3Norm + rate4Norm)) {
+				reaction = 4;
+			}
+
+			// Process the reaction
+
+			if(reaction == 1){
+				Bt++;
+
+			}else if(reaction == 2){
+				if(Bt > 0){
+					Bt--;
+				}
+
+			}else if(reaction == 3){
+				At++;
+
+			}else if(reaction == 4){
+				if(At > 0){
+					At--;
+				}
+			}
+
+			// Update the matrix with values normalized
+			t += -(1 / rateSum) * log(rand() / (T) RAND_MAX);
+			current.set(At, Bt, t);
+			data.push_back(current);
+			counter++;
+		}
+	}
+
+	bool print() {
+		printTabulated(std::cout, " ");
+	}
+
+	void printTabulated(std::ostream& out, const char* colsep) {
+		printTabulated(out, colsep, 10, 10);
+	}
+
+	void printTabulated(std::ostream& out, const char* colsep, int w, int p) {
+
+		out << std::setw(w) << std::setprecision(p) << "Total A";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Total B";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Normalized A";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Normalized B";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Time" << std::endl;
+		for (typename DataVector::iterator it = data.begin(); it != data.end(); ++it) {
+			out << std::setw(w) << std::setprecision(p) << (*it).A << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).B << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).nA << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).nB << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).t << std::endl;
+		}
+	}
+
+	bool exportCsv(const char* basename) {
+
+		bool ret = false;
+    	std::stringstream filename;
+		filename << basename << "_" << initials.A << "_" << initials.B << ".csv";
+		std::ofstream file;
+		file.open(filename.str().data());
+		if (file.is_open()) {
+			exportCsv(file);
+			file.close();
+			ret = true;
+		} else {
+			std::cout << "ERROR: Couldn't open " << filename << std::endl;
+		}
+		return ret;
+	}
+
+	void exportCsv(std::ofstream& file) {
+		printTabulated(file, ";", 0, 10);
+	}
+
 };
 
 #endif
