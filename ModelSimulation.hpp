@@ -60,23 +60,25 @@ public:
 		long At = initialA;
 		long Bt = initialB;
 		T t = 0;
+		Data current(At, Bt, t);
 
 		// Prepare the vector for receiving the values
 		data.clear();
-		data.resize(initialA);
+		data.push_back(current);
 
 		// Defining the initial values
 		data[0].set(initialA, initialB, 0);
 
 		// Loop for calculating the further iterations 
-		for(int i = 1; i < initialA; i++){
+		do {
 			T P = At * Bt * rate;
 			T p = -(1/P);
 			At--;
 			//Bt++;
 			t += p * log(rand()/(T)RAND_MAX);
-			data.at(i).set(At, Bt, t);
-		}
+			current.set(At, Bt, t);
+			data.push_back(current);
+		} while (At != 0);
 	}
 
 	bool print() {
@@ -84,7 +86,7 @@ public:
 	}
 
 	void printTabulated(std::ostream& out, const char* colsep) {
-		printTabulated(out, colsep, 10, 10);
+		printTabulated(out, colsep, 10, 15);
 	}
 
 	void printTabulated(std::ostream& out, const char* colsep, int w, int p) {
