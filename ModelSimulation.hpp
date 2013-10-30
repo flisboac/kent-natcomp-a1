@@ -337,4 +337,228 @@ public:
 
 };
 
+template <class T>
+class System3 {
+
+public:
+	struct Initials {
+
+		long A, B, C;
+		T kt, ka, kb;
+		T dc;
+
+		Initials() : A(0), B(0), C(0), kt(0), ka(0), kb(0), dc(0) {}
+		Initials(long vA, long vB, long vC, T vkt, T vka, T vkb, T vdc) :
+			A(vA), B(vB), C(vC), kt(vkt), ka(vka), kb(vkb), dc(vdc) {}
+	};
+
+	struct Data {
+
+		long A, B, C;
+		T nA, nB, nC;
+		T t;
+
+		Data() : A(0), B(0), C(0), nA(0), nB(0), nC(0) {};
+		Data(long vA, long vB, long vC, T vt) {
+			set(vA, vB, vC, vt);
+		}
+
+		void set(long vA, long vB, long vC, T vt) {
+			T sum = vA + vB + vC;
+			A = vA; B = vB; C = vC; t = vt;
+			nA = 0; nB = 0; nC = 0;
+			if (sum != 0) {
+				nA = A / sum;
+				nB = B / sum;
+				nC = C / sum;
+			}
+		}
+	};
+
+	typedef std::vector<Data> DataVector;
+
+	static const size_t DefaultMaxIterations = 1000;
+	static const long Default_A = 10;
+	static const long Default_B = 10;
+	static const long Default_C = 0;
+	static const T Default_kt = 10;
+	static const T Default_ka = 10;
+	static const T Default_kb = 10;
+	static const T Default_dc = 1;
+
+private:
+	Initials initials;
+	DataVector data;
+	size_t maxIterations;
+
+public:
+	System3() : maxIterations(DefaultMaxIterations) {}
+	System3(const Initials& vInitials) : initials(vInitials), maxIterations(DefaultMaxIterations) {}
+	System3(long vA, long vB, long vC, T vkt, T vka, T vkb, T vdc) : maxIterations(DefaultMaxIterations) {
+		initials.A = vA;
+		initials.B = vB;
+		initials.C = vC;
+		initials.kt = vkt;
+		initials.ka = vka;
+		initials.kb = vkb;
+		initials.dc = vdc;
+	}
+
+	Initials& getInitials() { return initials; }
+	size_t getTotalIterations() { return data.size(); }
+	size_t getMaxIterations() { return maxIterations; }
+	Data& getIteration(size_t iter) { return data.at(iter); }
+
+
+	void run() {
+		long At = initials.A;
+		long Bt = initials.B;
+		long Ct = initials.C;
+		Data current;
+		T t = 0;
+		size_t counterMax = maxIterations;
+		size_t counter = 0;
+
+		T kt = initials.kt;
+		T ka = initials.ka;
+		T kb = initials.kb;
+		T dc = initials.dc;
+
+		// create the matrix that will hold all the graph values
+		data.clear();
+
+		// Push initial values
+		current.set(At, Bt, Ct, t);
+		data.push_back(current);
+
+		// Calculate all rates and their normalization
+		while(counter != counterMax) {
+			T rate1 = At * Bt * kt;
+			T rate2 = At * Ct * ka;
+			T rate3 = Bt * Ct * kb;
+			T rate4 = Ct * dc;
+			T rate5 = At * dc;
+			T rate6 = Bt * dc;
+			T rateSum = rate1 + rate2 + rate3 + rate4 + rate5 + rate6;
+			T rate1Norm = rate1 / rateSum;
+			T rate2Norm = rate2 / rateSum;
+			T rate3Norm = rate3 / rateSum;
+			T rate4Norm = rate4 / rateSum;
+			T rate5Norm = rate5 / rateSum;
+			T rate6Norm = rate6 / rateSum;
+
+			// Monte Carlo algorithm to choose what will be the next reaction
+			int reaction = 0;
+			T randonN = rand()/(T)RAND_MAX;
+
+			if(0 <= randonN && randonN < rate1Norm){
+				reaction = 1;
+			}
+			if(rate1Norm <= randonN && randonN < (rate1Norm + rate2Norm)) {
+				reaction = 2;
+			}
+			if((rate1Norm + rate2Norm) <= randonN && randonN < (rate1Norm + rate2Norm + rate3Norm)) {
+				reaction = 3;
+			}
+			if((rate1Norm + rate2Norm + rate3Norm) <= randonN && randonN < (rate1Norm + rate2Norm + rate3Norm + rate4Norm)) {
+				reaction = 4;
+			}
+			if((rate1Norm + rate2Norm + rate3Norm + rate4Norm) <= randonN && randonN < (rate1Norm + rate2Norm + rate3Norm + rate4Norm + rate5Norm)) {
+				reaction = 5;
+			}
+			if((rate1Norm + rate2Norm + rate3Norm + rate4Norm + rate5Norm) <= randonN && randonN < (rate1Norm + rate2Norm + rate3Norm + rate4Norm + rate5Norm + rate6Norm)) {
+				reaction = 6;
+			}
+
+			// Process the reaction
+			if(reaction == 1){
+				At--;
+				Bt--;
+				Ct++;
+
+			}else if(reaction == 2){
+				At--;
+				Ct--;
+
+			}else if(reaction == 3){
+				Bt--;
+				Ct--;
+
+			}else if(reaction == 4){
+				Ct--;
+
+			}else if(reaction == 5){
+				At--;
+
+			}else if(reaction == 6){
+				Bt--;
+			}
+
+			// Update the matrix with values normalized
+			t += -(1 / rateSum) * log(rand() / (T)RAND_MAX);
+			current.set(At, Bt, Ct, t);
+			data.push_back(current);
+			counter++;
+			if (At == 0 && Bt == 0 && Ct == 0) break;
+		}	
+	}
+
+	bool print() {
+		printTabulated(std::cout, " ");
+	}
+
+	void printTabulated(std::ostream& out, const char* colsep) {
+		printTabulated(out, colsep, 10, 10);
+	}
+
+	void printTabulated(std::ostream& out, const char* colsep, int w, int p) {
+
+		out << std::setw(w) << std::setprecision(p) << "Total A";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Total B";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Total C";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Normalized A";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Normalized B";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Normalized C";
+		out << std::setw(w) << std::setprecision(p) << colsep;
+		out << std::setw(w) << std::setprecision(p) << "Time" << std::endl;
+		for (typename DataVector::iterator it = data.begin(); it != data.end(); ++it) {
+			out << std::setw(w) << std::setprecision(p) << (*it).A << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).B << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).C << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).nA << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).nB << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).nC << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).t << std::endl;
+		}
+	}
+
+	bool exportCsv(const char* basename) {
+
+		bool ret = false;
+    	std::stringstream filename;
+		filename << basename << "_" << initials.A << "_" << initials.B << "_" << initials.C << ".csv";
+		std::ofstream file;
+		file.open(filename.str().data());
+		if (file.is_open()) {
+			exportCsv(file);
+			file.close();
+			ret = true;
+		} else {
+			std::cout << "ERROR: Couldn't open " << filename << std::endl;
+		}
+		return ret;
+	}
+
+	void exportCsv(std::ofstream& file) {
+		printTabulated(file, ";", 0, 10);
+	}
+
+};
+
+
 #endif

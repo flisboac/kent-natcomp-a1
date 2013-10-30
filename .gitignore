@@ -15,5 +15,6 @@
 *.lib
 
 # Other generated files
-System1_*
-System2_*
+System1*.*
+System2*.*
+System3*.*

@@ -17,7 +17,7 @@ clean:
 	$(RM) $(OBJS) $(EXEC)
 
 cleandata:
-	$(RM) System1*.* System2*.*
+	$(RM) System1*.* System2*.* System3*.*
 
 cleanall: clean cleandata
 

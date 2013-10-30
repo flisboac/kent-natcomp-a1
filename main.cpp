@@ -30,6 +30,7 @@ static const System2Run System2_Runs[] = {
 static void print_help(const char* progname);
 static void run_system1(System1<PREC>& sys, const char* basename, bool exportData);
 static void run_system2(System2<PREC>& sys, const char* basename, bool exportData);
+static void run_system3(System3<PREC>& sys, const char* basename, bool exportData);
 
 int main(int argc, char** argv){
 	int systemId, ret = 0;
@@ -128,6 +129,38 @@ int main(int argc, char** argv){
 		}
 		break;
 	}
+	case 3: {
+		bool specific = false;
+		long A  = System3<PREC>::Default_A;  // Initial A
+		long B  = System3<PREC>::Default_B;  // Initial B
+		long C  = System3<PREC>::Default_C; 
+		PREC kt = System3<PREC>::Default_kt; 
+		PREC ka = System3<PREC>::Default_ka; 
+		PREC kb = System3<PREC>::Default_kb; 
+		PREC dc = System3<PREC>::Default_dc; 
+
+    	const char* basename;
+
+		if (argc >  2) { specific = true; A  = atol(argv[ 2]); };
+		if (argc >  3) { specific = true; B  = atol(argv[ 3]); };
+		if (argc >  4) { specific = true; C  = atol(argv[ 4]); };
+		if (argc >  5) { specific = true; kt = ATOX(argv[ 5]); };
+		if (argc >  6) { specific = true; ka = ATOX(argv[ 6]); };
+		if (argc >  7) { specific = true; kb = ATOX(argv[ 7]); };
+		if (argc >  8) { specific = true; dc = ATOX(argv[ 8]); };
+
+		if (argc > 9) {
+			specific = true;
+			basename = argv[9];
+
+		} else {
+			basename = "System3";
+		}
+
+		System3<PREC> sys(A, B, C, kt, ka, kb, dc);
+		run_system3(sys, basename, true);
+		break;
+	}
 	default:
 		print_help(argv[1]);
 		break;
@@ -166,6 +199,28 @@ void run_system2(System2<PREC>& sys, const char* basename, bool exportData) {
 	std::cout << "Value Kb: "                          << sys.getInitials().Kb << std::endl;
 	std::cout << "Value h: "                           << sys.getInitials().h  << std::endl;
 	std::cout << "Value l: "                           << sys.getInitials().l  << std::endl;
+	std::cout << "Output file basename: " << basename << std::endl;
+
+	std::cout << "* Starting simulation..." << std::endl;
+	sys.run();
+
+	if (exportData) {
+		std::cout << "* Finished. Exporting data..." << std::endl;
+		sys.exportCsv(basename);
+	}
+
+	std::cout << "* Finished." << std::endl;
+}
+
+void run_system3(System3<PREC>& sys, const char* basename, bool exportData) {
+	std::cout << "System: 2" << std::endl;
+	std::cout << "Initial Population of A                : " << sys.getInitials().A  << std::endl;
+	std::cout << "Initial Population of B                : " << sys.getInitials().B  << std::endl;
+	std::cout << "Initial Population of C                : " << sys.getInitials().C  << std::endl;
+	std::cout << "Rate of Positive Reaction (kt, A & B)  : " << sys.getInitials().kt << std::endl;
+	std::cout << "Rate of Negative Reaction (ka, A & !B) : " << sys.getInitials().ka << std::endl;
+	std::cout << "Rate of Negative Reaction (kb, !A & B) : " << sys.getInitials().kb << std::endl;
+	std::cout << "Decay Rate of C (dc, !A & !B)          : " << sys.getInitials().dc << std::endl;
 	std::cout << "Output file basename: " << basename << std::endl;
 
 	std::cout << "* Starting simulation..." << std::endl;
