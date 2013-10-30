@@ -17,10 +17,21 @@ public:
 
 		long A;
 		long B;
+		T nA;
+		T nB;
 		T t;
 
-		Data() : A(0), B(0), t(0) {}
-		Data(long nA, long nB, T nt) : A(nA), B(nB), t(nt) {}
+		Data() : A(0), B(0), t(0), nA(0), nB(0) {}
+		Data(long nA, long nB, T nt) : A(nA), B(nB), t(nt), nA(0), nB(0) {}
+
+		void set(long vA, long vB, T vt) {
+			A = vA; B = vB; t = vt;
+			T sum = A + B;
+			if (sum != 0) {
+				nA = A / sum;
+				nB = B / sum;
+			}
+		}
 	};
 
 	typedef typename std::vector<System1<T>::Data> DataVector;
@@ -55,20 +66,16 @@ public:
 		data.resize(initialA);
 
 		// Defining the initial values
-		data[0].A = initialA;
-		data[0].B = initialB;
-		data[0].t = 0;
+		data[0].set(initialA, initialB, 0);
 
 		// Loop for calculating the further iterations 
 		for(int i = 1; i < initialA; i++){
 			T P = At * Bt * rate;
 			T p = -(1/P);
 			At--;
-			Bt++;
+			//Bt++;
 			t += p * log(rand()/(T)RAND_MAX);
-			data.at(i).A = At;
-			data.at(i).B = Bt;
-			data.at(i).t = t; 
+			data.at(i).set(At, Bt, t);
 		}
 	}
 
@@ -92,12 +99,10 @@ public:
 		out << std::setw(w) << std::setprecision(p) << colsep;
 		out << std::setw(w) << std::setprecision(p) << "Time" << std::endl;
 		for (typename DataVector::iterator it = data.begin(); it != data.end(); ++it) {
-			T normA = (*it).A/(T)((*it).A + (*it).B);
-			T normB = (*it).A/(T)((*it).A + (*it).B);
 			out << std::setw(w) << std::setprecision(p) << (*it).A << colsep;
 			out << std::setw(w) << std::setprecision(p) << (*it).B << colsep;
-			out << std::setw(w) << std::setprecision(p) << normA << colsep;
-			out << std::setw(w) << std::setprecision(p) << normB << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).nA << colsep;
+			out << std::setw(w) << std::setprecision(p) << (*it).nB << colsep;
 			out << std::setw(w) << std::setprecision(p) << (*it).t << std::endl;
 		}
 	}
@@ -167,7 +172,7 @@ public:
 
 	typedef std::vector<Data> DataVector;
 
-	static const size_t DefaultMaxIterations = 1000;
+	static const size_t DefaultMaxIterations = 100000;
 	static const long Default_A = 100;
 	static const long Default_B = 10;
 	static const T Default_da = 1;

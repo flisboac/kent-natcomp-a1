@@ -22,9 +22,9 @@ static const System1Run System1_Runs[] = {
 
 typedef System2<PREC>::Initials System2Run;
 static const System2Run System2_Runs[] = {
-	{ 199,   1, /* d */ 1, 1, /* k */ 1, 1, /* K */ 1, 1, /* h/l */ 1, 1 },
-	{ 1999,  1, /* d */ 1, 1, /* k */ 1, 1, /* K */ 1, 1, /* h/l */ 1, 1 },
-	{ 19999, 1, /* d */ 1, 1, /* k */ 1, 1, /* K */ 1, 1, /* h/l */ 1, 1 }
+	{ 2000, 200, /* d */ 1, 1, /* k */ 1, 1, /* K */ 1, 1, /* h/l */ 1, 1 },
+	{ 2000, 2000, /* d */ 0.1, 0.1, /* k */ 100, 100, /* K */ 10, 10, /* h/l */ 0.5, -0.5 },
+	{ 5000, 5000, /* d */ 10, 10, /* k */ 0.1, 0.1, /* K */ 0.1, 0.1, /* h/l */ -100, -100 }
 };
 
 static void print_help(const char* progname);
