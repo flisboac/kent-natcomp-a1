@@ -388,7 +388,7 @@ public:
 	static const long Default_A = 10;
 	static const long Default_B = 10;
 	static const long Default_C = 0;
-	static const T Default_kt = 10;
+	static const T Default_kt = 100;
 	static const T Default_ka = 10;
 	static const T Default_kb = 10;
 	static const T Default_dc = 1;
@@ -485,11 +485,9 @@ public:
 
 			}else if(reaction == 2){
 				At--;
-				Ct--;
 
 			}else if(reaction == 3){
 				Bt--;
-				Ct--;
 
 			}else if(reaction == 4){
 				Ct--;
@@ -499,6 +497,7 @@ public:
 
 			}else if(reaction == 6){
 				Bt--;
+
 			}
 
 			// Update the matrix with values normalized

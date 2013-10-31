@@ -137,7 +137,7 @@ int main(int argc, char** argv){
 		PREC kt = System3<PREC>::Default_kt; 
 		PREC ka = System3<PREC>::Default_ka; 
 		PREC kb = System3<PREC>::Default_kb; 
-		PREC dc = System3<PREC>::Default_dc; 
+		PREC dc = System3<PREC>::Default_dc;
 
     	const char* basename;
 
