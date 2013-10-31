@@ -384,13 +384,13 @@ public:
 
 	typedef std::vector<Data> DataVector;
 
-	static const size_t DefaultMaxIterations = 1000;
+	static const size_t DefaultMaxIterations = 1000000;
 	static const long Default_A = 10;
 	static const long Default_B = 10;
 	static const long Default_C = 0;
-	static const T Default_kt = 100;
-	static const T Default_ka = 10;
-	static const T Default_kb = 10;
+	static const T Default_kt = 2;
+	static const T Default_ka = 1;
+	static const T Default_kb = 1;
 	static const T Default_dc = 1;
 
 private:
